@@ -15,9 +15,9 @@ impl<const FREQ: u32> MonoTimer<TIM2, FREQ> {
         rcc.apb1rstr.modify(|_, w| w.tim2rst().set_bit());
         rcc.apb1rstr.modify(|_, w| w.tim2rst().clear_bit());
         let pclk_mul = if clocks.ppre1() == 1 { 1 } else { 2 };
-        let prescaler = clocks.pclk1().0 * pclk_mul / FREQ - 1;
+        let prescaler = clocks.pclk1().to_Hz() * pclk_mul / FREQ - 1;
         timer.psc.write(|w| w.psc().bits(prescaler as u16));
-        timer.arr.write(|w| unsafe { w.bits(u32::MAX) });
+        timer.arr.write(|w| w.bits(u32::MAX));
         timer.egr.write(|w| w.ug().set_bit());
         timer.sr.modify(|_, w| w.uif().clear_bit());
         timer.cr1.modify(|_, w| w.cen().set_bit().udis().set_bit());
@@ -40,7 +40,7 @@ impl<const FREQ: u32> Monotonic for MonoTimer<TIM2, FREQ> {
 
     fn set_compare(&mut self, instant: Self::Instant) {
         self.0
-            .ccr1
+            .ccr1()
             .write(|w| w.ccr().bits(instant.duration_since_epoch().ticks()));
     }
 
@@ -61,9 +61,9 @@ impl<const FREQ: u32> MonoTimer<TIM5, FREQ> {
         rcc.apb1rstr.modify(|_, w| w.tim5rst().set_bit());
         rcc.apb1rstr.modify(|_, w| w.tim5rst().clear_bit());
         let pclk_mul = if clocks.ppre1() == 1 { 1 } else { 2 };
-        let prescaler = clocks.pclk1().0 * pclk_mul / FREQ - 1;
+        let prescaler = clocks.pclk1().to_Hz() * pclk_mul / FREQ - 1;
         timer.psc.write(|w| w.psc().bits(prescaler as u16));
-        timer.arr.write(|w| unsafe { w.bits(u32::MAX) });
+        timer.arr.write(|w| w.bits(u32::MAX));
         timer.egr.write(|w| w.ug().set_bit());
         timer.sr.modify(|_, w| w.uif().clear_bit());
         timer.cr1.modify(|_, w| w.cen().set_bit().udis().set_bit());
@@ -86,7 +86,7 @@ impl<const FREQ: u32> Monotonic for MonoTimer<TIM5, FREQ> {
 
     fn set_compare(&mut self, instant: Self::Instant) {
         self.0
-            .ccr1
+            .ccr1()
             .write(|w| w.ccr().bits(instant.duration_since_epoch().ticks()));
     }
 
