@@ -56,3 +56,15 @@ $ cargo test
 0.000002 INFO  all tests passed!
 (..)
 ```
+
+## WSL notes:
+
+Process to access USB from WSL: 
+- Start Windows powershell as an administrator.
+- Run `usbipd wsl list` to see all USB-devices that can connect to wsl.
+- Run following `usbipd wsl attach --busid <BUSID>` but change `<BUSID>` to corresponding from above command.
+- Verify that the right USB can be accessed in WSL by running `usbipd wsl list`.
+
+
+
+
