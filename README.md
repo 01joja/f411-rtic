@@ -1,3 +1,16 @@
+# Working examples:
+
+I haven't gotten all the examples to work with "standard rtic" or "modular rtic".
+
+The following works:
+- blink.rs
+- button-bool.rs
+- button-double.rs
+- button-duration.rs
+- button.rs
+- exti.rs
+
+
 # `NUCLEO-F411RE` playground
 
 [`probe-run`] + [`defmt`] + [`flip-link`] + [`rtic`] Rust embedded playground
