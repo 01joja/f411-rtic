@@ -4,10 +4,10 @@
 
 use f411_rtic as _; // global logger + panicking-behavior + memory layout
 
-#[rtic::app(device = stm32f4xx_hal::pac)]
+#[rtic::app(device = stm32f4xx_hal::pac, compiler_passes = [standard])]
 mod app {
     use stm32f4xx_hal::{
-        gpio::{gpioa::PA5, gpioc::PC13, Edge, ExtiPin, Input, Output, PullUp, PushPull},
+        gpio::{gpioa::PA5, gpioc::PC13, Edge, ExtiPin, Input, Output, PushPull},
         prelude::*,
     };
 
@@ -17,14 +17,14 @@ mod app {
     #[local]
     struct Local {
         led: PA5<Output<PushPull>>,
-        btn: PC13<Input<PullUp>>,
+        btn: PC13<>,
     }
 
     #[init]
     fn init(mut ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         // Set up the system clock.
         let rcc = ctx.device.RCC.constrain();
-        let _clocks = rcc.cfgr.sysclk(48.mhz()).freeze();
+        let _clocks = rcc.cfgr.sysclk(48.MHz()).freeze();
 
         // Set up the LED. On the Nucleo-F411RE it's connected to pin PA5.
         let gpioa = ctx.device.GPIOA.split();

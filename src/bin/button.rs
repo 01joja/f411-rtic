@@ -4,11 +4,11 @@
 
 use f411_rtic as _; // global logger + panicking-behavior + memory layout
 
-#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1])]
+#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1], compiler_passes = [standard])]
 mod app {
     use dwt_systick_monotonic::{DwtSystick, ExtU32};
     use stm32f4xx_hal::{
-        gpio::{gpioc::PC13, Edge, ExtiPin, Input, PullUp},
+        gpio::{gpioc::PC13, Edge, ExtiPin, Input},
         prelude::*,
     };
     const FREQ: u32 = 48_000_000;
@@ -17,7 +17,7 @@ mod app {
     type MyMono = DwtSystick<FREQ>;
     #[shared]
     struct Shared {
-        btn: PC13<Input<PullUp>>,
+        btn: PC13<>,
     }
 
     #[local]
@@ -26,7 +26,7 @@ mod app {
     #[init]
     fn init(mut ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let rcc = ctx.device.RCC.constrain();
-        let clocks = rcc.cfgr.sysclk(FREQ.hz()).freeze();
+        let clocks = rcc.cfgr.sysclk(FREQ.Hz()).freeze();
 
         let gpioc = ctx.device.GPIOC.split();
         let mut btn = gpioc.pc13.into_pull_up_input();
@@ -41,7 +41,7 @@ mod app {
             &mut ctx.core.DCB,
             ctx.core.DWT,
             ctx.core.SYST,
-            clocks.hclk().0,
+            clocks.hclk().to_Hz(),
         );
 
         defmt::info!("Press the button!");

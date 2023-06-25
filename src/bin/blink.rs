@@ -4,7 +4,7 @@
 
 use f411_rtic as _; // global logger + panicking-behavior + memory layout
 
-#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1])]
+#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1], compiler_passes = [standard])]
 mod app {
     use dwt_systick_monotonic::{DwtSystick, ExtU32};
     use stm32f4xx_hal::{
@@ -12,7 +12,7 @@ mod app {
         prelude::*,
     };
 
-    #[monotonic(binds = SysTick, default = true)]
+    #[monotonic(binds = SysTick, default = true)] 
     type MyMono = DwtSystick<48_000_000>; // 48 MHz
 
     #[shared]
@@ -30,7 +30,7 @@ mod app {
 
         // Set up the system clock.
         let rcc = ctx.device.RCC.constrain();
-        let clocks = rcc.cfgr.sysclk(48.mhz()).freeze();
+        let clocks = rcc.cfgr.sysclk(48.MHz()).freeze();
 
         // Set up the LED. On the Nucleo-F411RE it's connected to pin PA5.
         let gpioa = ctx.device.GPIOA.split();
@@ -40,7 +40,7 @@ mod app {
             &mut ctx.core.DCB,
             ctx.core.DWT,
             ctx.core.SYST,
-            clocks.hclk().0,
+            clocks.hclk().to_Hz(),
         );
 
         defmt::info!("Hello world!");

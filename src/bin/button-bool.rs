@@ -4,11 +4,11 @@
 
 use f411_rtic as _; // global logger + panicking-behavior + memory layout
 
-#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1])]
+#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1], compiler_passes = [standard])]
 mod app {
     use dwt_systick_monotonic::{DwtSystick, ExtU32};
     use stm32f4xx_hal::{
-        gpio::{gpioc::PC13, Edge, ExtiPin, Input, PullUp},
+        gpio::{gpioc::PC13, Edge, ExtiPin},
         prelude::*,
     };
     const FREQ: u32 = 48_000_000;
@@ -19,16 +19,18 @@ mod app {
     #[shared]
     struct Shared {
         was_pressed: bool,
-        btn: PC13<Input<PullUp>>,
+        btn: PC13<>,
     }
 
     #[local]
-    struct Local {}
+    struct Local {
+        hold: Option<hold::SpawnHandle>,
+    }
 
     #[init]
     fn init(mut ctx: init::Context) -> (Shared, Local, init::Monotonics) {
         let rcc = ctx.device.RCC.constrain();
-        let clocks = rcc.cfgr.sysclk(FREQ.hz()).freeze();
+        let clocks = rcc.cfgr.sysclk(FREQ.Hz()).freeze();
 
         let gpioc = ctx.device.GPIOC.split();
         let mut btn = gpioc.pc13.into_pull_up_input();
@@ -43,7 +45,7 @@ mod app {
             &mut ctx.core.DCB,
             ctx.core.DWT,
             ctx.core.SYST,
-            clocks.hclk().0,
+            clocks.hclk().to_Hz(),
         );
 
         defmt::info!("Press the button!");
@@ -52,7 +54,9 @@ mod app {
                 btn,
                 was_pressed: false,
             },
-            Local {},
+            Local {
+                hold: None
+            },
             init::Monotonics(mono),
         )
     }
@@ -65,12 +69,12 @@ mod app {
     }
 
     #[task(binds = EXTI15_10, shared = [btn])]
-    fn on_exti(mut ctx: on_exti::Context) {
+    fn on_exti(mut ctx: on_exti::Context) { 
         ctx.shared.btn.lock(ExtiPin::clear_interrupt_pending_bit);
         debounce::spawn_after(30.millis()).ok();
     }
 
-    #[task(shared = [btn, was_pressed], local = [hold: Option<hold::SpawnHandle> = None])]
+    #[task(shared = [btn, was_pressed], local = [hold])]
     fn debounce(ctx: debounce::Context) {
         let hold = ctx.local.hold;
         if let Some(handle) = hold.take() {
